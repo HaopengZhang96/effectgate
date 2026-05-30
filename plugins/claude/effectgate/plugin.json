@@ -1,0 +1,6 @@
+{
+  "name": "effectgate",
+  "version": "0.1.0",
+  "displayName": "EffectGate",
+  "description": "Wrap Claude Code Bash actions with project-defined tripwires for protected production effects."
+}

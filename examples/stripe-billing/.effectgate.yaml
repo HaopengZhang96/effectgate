@@ -1,0 +1,13 @@
+tripwires:
+  - id: billing.charge
+    risk: money_movement
+    match:
+      keywords: ["chargeCustomer", "stripe.charges.create", "createPaymentIntent"]
+      files: ["src/billing/**", "scripts/backfill/**"]
+    when:
+      env:
+        STRIPE_MODE: "live"
+    action: ask
+    approvals:
+      max_ttl: "30m"
+      max_calls: 3

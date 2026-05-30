@@ -1,0 +1,59 @@
+{
+  "name": "effectgate",
+  "version": "0.1.0",
+  "description": "Project-defined tripwires for AI coding agents and production-impacting effects.",
+  "homepage": "https://github.com/HaopengZhang96/effectgate#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/HaopengZhang96/effectgate.git"
+  },
+  "bugs": {
+    "url": "https://github.com/HaopengZhang96/effectgate/issues"
+  },
+  "keywords": [
+    "ai-agent",
+    "claude-code",
+    "codex",
+    "guardrails",
+    "agent-safety",
+    "approval",
+    "menubar",
+    "cli"
+  ],
+  "type": "module",
+  "main": "./src/sdk/node.js",
+  "exports": {
+    ".": "./src/sdk/node.js",
+    "./core": "./src/core/check.js",
+    "./node-register": "./src/sdk/node-register.cjs",
+    "./node-loader": "./src/sdk/node-loader.mjs"
+  },
+  "files": [
+    "README.md",
+    "README.zh-CN.md",
+    "bin/",
+    "src/",
+    "adapters/",
+    "plugins/",
+    "desktop/",
+    "examples/",
+    "python/effectgate/__init__.py",
+    "java/"
+  ],
+  "bin": {
+    "effectgate": "./bin/effectgate.js"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "test:all": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "minimatch": "^10.0.3",
+    "yaml": "^2.8.1"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "Apache-2.0"
+}

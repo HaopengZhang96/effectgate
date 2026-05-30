@@ -1,0 +1,14 @@
+tripwires:
+  - id: prod-db-delete
+    risk: irreversible_data_delete
+    match:
+      keywords: ["deleteTenant", "dropUserData", "prisma.user.deleteMany"]
+      sql: ["DELETE\\\\s+FROM\\\\s+users", "DROP\\\\s+TABLE", "TRUNCATE\\\\s+TABLE"]
+      files: ["migrations/**", "scripts/**"]
+    when:
+      env:
+        DATABASE_URL: "*prod*"
+    action: ask
+    approvals:
+      max_ttl: "10m"
+      max_calls: 1

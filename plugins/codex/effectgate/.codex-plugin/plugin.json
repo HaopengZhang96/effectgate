@@ -1,0 +1,18 @@
+{
+  "name": "effectgate",
+  "version": "0.1.0",
+  "description": "Wrap Codex shell actions with project-defined tripwires for protected production effects.",
+  "author": {
+    "name": "EffectGate"
+  },
+  "interface": {
+    "displayName": "EffectGate",
+    "shortDescription": "Project-defined protected-effect tripwires for Codex.",
+    "longDescription": "EffectGate wraps Codex shell actions with local tripwires, pending alerts, and expiring approvals for project-specific production side effects.",
+    "developerName": "EffectGate",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "Use EffectGate to protect project-specific production side effects before running Codex shell actions."
+  },
+  "license": "Apache-2.0"
+}
