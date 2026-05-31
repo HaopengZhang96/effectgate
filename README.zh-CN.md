@@ -4,7 +4,7 @@
 
 面向 AI coding agent 的项目级副作用保险丝。
 
-EffectGate 让 Claude Code、Codex 和本地脚本照常自动工作；只有当它们触发你在项目里显式注册的线上副作用时，才阻断并留下本地审批/审计记录。
+EffectGate 让 Claude Code、Codex 和本地脚本照常运行，只有当它们要触发你在项目里显式注册的线上副作用时，才把它拦下来，留下一条本地的待审批提醒和审计记录。
 
 ```text
 EffectGate blocked a protected effect
@@ -22,7 +22,7 @@ Approve narrowly:
 - effectgate approve billing.charge --ttl 10m --max-calls 1 --scope session
 ```
 
-## 60 秒开始
+## 快速开始
 
 开发本仓库时：
 
@@ -49,13 +49,13 @@ effectgate verify-install billing.charge --surface cli
 ./.effectgate/effectgate-bar.sh --json
 ```
 
-发布后推荐安装方式：
+包发布之后，全局安装：
 
 ```bash
 npm install -g effectgate
 ```
 
-`effectgate bar` 是轻量终端状态栏。当注册过的 protected effect 被尝试执行时，会显示：
+`effectgate bar` 是一个终端状态栏。当注册过的 protected effect 被尝试执行时，会显示：
 
 ```text
 EffectGate: 1 pending - billing.charge
@@ -214,9 +214,11 @@ Claude Code 和 Codex 共用同一个 core、approval token store、pending stor
 - `DROP TABLE` 或没有 `WHERE` 的 `DELETE`
 - Java 里带线上副作用的方法/包名
 
-目标不是每一步都问用户。正常动作静默通过；只有命中项目注册的 tripwire 才打断。审批后如果 protected effect 确实执行过，CLI bar 和桌面菜单栏仍会留下本地可见痕迹。
+它不是要在每一步都来问你。普通动作静默通过，只有命中项目注册的 tripwire 才会打断。审批放行、protected effect 真的执行之后，CLI bar 和桌面菜单栏还会留下一条本地可见的痕迹，但不会再弹一次审批。
 
-## 可衡量卖点
+## 怎么衡量它有没有用
+
+不用「减少焦虑」这种说法，看几个能测的指标：
 
 - `unsafe pass-through`：注册过的 protected effect 是否能绕过审批执行。
 - `silent pass rate`：普通 agent 动作静默通过比例。

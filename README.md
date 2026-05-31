@@ -4,7 +4,7 @@
 
 Project-defined tripwires for AI coding agents.
 
-EffectGate lets Claude Code, Codex, and local scripts work normally until they are about to trigger a production-impacting effect that your project explicitly registered.
+Claude Code, Codex, and local scripts run as usual. EffectGate only steps in when one of them is about to trigger a production-impacting effect that you registered in the project — then it blocks, leaves a local pending alert, and writes an audit receipt.
 
 ```text
 EffectGate blocked a protected effect
@@ -22,20 +22,21 @@ Approve narrowly:
 - effectgate approve billing.charge --ttl 10m --max-calls 1 --scope session
 ```
 
-## 60-Second Start
+## Quick start
+
+Working from this repo while developing:
 
 ```bash
-# From this repo while developing:
 npm install
 npm link
 
-# See the product moment immediately:
+# Try the demo:
 effectgate demo --dir /tmp
 cd /tmp/effectgate-demo
 effectgate bar --once
 ```
 
-Then protect a real repo:
+Protect a real repo:
 
 ```bash
 effectgate setup \
@@ -49,37 +50,40 @@ effectgate verify-install billing.charge --surface cli
 ./.effectgate/effectgate-bar.sh --json
 ```
 
-For a published package, the intended install path is:
+Once the package is published, install it globally:
 
 ```bash
 npm install -g effectgate
 ```
 
-`effectgate bar` is a lightweight terminal status bar. It prints a red-light style alert when a registered protected effect was attempted:
+## The status bar
+
+`effectgate bar` is a terminal status bar. When a registered effect is attempted, it shows a red-light alert:
 
 ```text
 EffectGate: 1 pending - billing.charge
 ```
 
-Use `effectgate pending`, `effectgate approve <effect-id>`, or `effectgate deny <pending-id>` to resolve alerts.
-Use `effectgate bar --once --recent 1h` when you also want the bar to show recently approved protected effects that actually executed.
-Use `effectgate test-alert <effect-id>` after setup to create a safe local alert and confirm your CLI bar, daemon, or desktop menu bar is watching the same project state.
-Use `effectgate verify-install <effect-id>` for the one-command version: it creates the safe alert, checks the CLI bar, and checks the local daemon path used by the desktop menu bar.
-Use `--surface cli` or `--surface desktop` when you also want to prove the project-local helper script or LaunchAgents are installed. Desktop surface verification also runs the installed menu-bar binary in self-test mode and confirms it can read the pending effect from the daemon.
+Clear alerts with `effectgate pending`, `effectgate approve <effect-id>`, or `effectgate deny <pending-id>`. Add `--recent 1h` to also surface recently approved effects that actually ran:
 
-For tmux, sketchybar, waybar, custom prompts, or scripts:
+```bash
+effectgate bar --once --recent 1h
+```
+
+After setup, `effectgate test-alert <effect-id>` creates a safe local alert so you can confirm your CLI bar, daemon, or desktop menu bar is watching the same project state. `effectgate verify-install <effect-id>` does it in one shot: it creates the alert, checks the CLI bar, and checks the daemon path the desktop menu bar reads from. Add `--surface cli` or `--surface desktop` to also prove the project-local helper script or LaunchAgents are installed — the desktop check runs the menu-bar binary in self-test mode and confirms it can read the pending effect from the daemon.
+
+To feed the bar into tmux, sketchybar, waybar, a shell prompt, or any script:
 
 ```bash
 effectgate bar --once --json
-effectgate bar --once --recent 1h --json
 effectgate install cli-bar
 effectgate verify-install billing.charge --surface cli
 ./.effectgate/effectgate-bar.sh --json
 ```
 
-The installed helper uses `--recent 24h` by default so a status bar can show both pending approvals and protected effects that already ran. Override the window with `EFFECTGATE_RECENT_WINDOW=1h ./.effectgate/effectgate-bar.sh --json` or pass a later `--recent` flag.
+The installed helper defaults to `--recent 24h`, so a status bar shows both pending approvals and effects that already ran. Change the window with `EFFECTGATE_RECENT_WINDOW=1h ./.effectgate/effectgate-bar.sh --json`, or pass a `--recent` flag.
 
-For a macOS menu-bar companion:
+## macOS menu bar
 
 ```bash
 effectgate setup \
@@ -91,14 +95,13 @@ effectgate verify-install billing.charge --surface desktop
 ~/.effectgate/start-effectgate-desktop.sh
 ```
 
-That registers the protected effect, builds `~/.effectgate/EffectGateMenuBar`, writes two project-scoped LaunchAgents, starts the local daemon for the current repo, and shows pending protected effects in the menu bar.
-Each project gets a stable local daemon port by default; use `effectgate install desktop --port 9555` if you want to choose it. The installer passes the matching `EFFECTGATE_DAEMON_URL` to the menu bar so it watches the same project daemon.
-Pending items in the menu bar include `Approve 10m` and `Deny` actions backed by the local daemon. When no approval is pending, the menu also shows recently executed protected effects from the local audit log.
-If the daemon is offline, the menu bar shows an offline status and URL only; it does not display fake protected-effect approvals.
+This registers the effect, builds `~/.effectgate/EffectGateMenuBar`, writes two project-scoped LaunchAgents, starts the local daemon for the current repo, and shows pending effects in the menu bar. Each project gets a stable local daemon port; run `effectgate install desktop --port 9555` to pick your own. The installer points the menu bar at the matching `EFFECTGATE_DAEMON_URL` so both watch the same daemon.
 
-## Configure Tripwires
+Pending items in the menu carry `Approve 10m` and `Deny` actions backed by the local daemon. When nothing is pending, the menu lists recently executed effects from the local audit log. If the daemon is offline, the menu shows an offline status and the URL — never a fake approval.
 
-Most projects can start without editing YAML:
+## Configure tripwires
+
+Most projects can start without touching YAML:
 
 ```bash
 effectgate protect prod-db-delete \
@@ -110,7 +113,7 @@ effectgate protect prod-db-delete \
   --max-calls 1
 ```
 
-`effectgate protect` creates or updates `.effectgate.yaml` and keeps repeated registrations deduplicated. Use YAML directly when you want reviewable, hand-tuned rules:
+`effectgate protect` creates or updates `.effectgate.yaml` and deduplicates repeated registrations. Edit the YAML directly when you want reviewable, hand-tuned rules:
 
 ```yaml
 tripwires:
@@ -157,9 +160,9 @@ effectgate scan-java src/main/java/AdminOps.java
 effectgate doctor
 ```
 
-Approvals are local, narrow, expiring tokens stored under `.effectgate/`. Pending alerts live in `.effectgate/pending.json`. Audit receipts are JSONL in `.effectgate/audit.jsonl`.
+Approvals are local, narrow, expiring tokens stored under `.effectgate/`. Pending alerts live in `.effectgate/pending.json`; audit receipts are JSONL in `.effectgate/audit.jsonl`.
 
-## Runtime Guards
+## Runtime guards
 
 Node:
 
@@ -195,9 +198,7 @@ Install the Claude Code hook into the current project:
 effectgate install claude
 ```
 
-That writes `.claude/settings.local.json` with a Bash `PreToolUse` hook that wraps commands as `effectgate run -- <original command>`.
-
-The generated hook shape is:
+That writes `.claude/settings.local.json` with a Bash `PreToolUse` hook that wraps commands as `effectgate run -- <original command>`:
 
 ```json
 {
@@ -217,21 +218,21 @@ The generated hook shape is:
 }
 ```
 
-Codex plugin assets live in `plugins/codex/effectgate`. Inspect the path and install instructions with:
+Codex plugin assets live in `plugins/codex/effectgate`. Check the path and install steps with:
 
 ```bash
 effectgate install codex --dry-run
 ```
 
-The shared hook wraps Bash commands as:
+Both adapters wrap Bash commands the same way:
 
 ```bash
 effectgate run -- <original command>
 ```
 
-## Desktop Bar Path
+## Desktop daemon
 
-The CLI includes a local daemon and a minimal macOS menu-bar companion:
+The CLI ships a local daemon and a small macOS menu-bar companion:
 
 ```bash
 effectgate daemon --port 8765
@@ -243,10 +244,9 @@ effectgate verify-install billing.charge --surface desktop
 ~/.effectgate/start-effectgate-desktop.sh
 ```
 
-The daemon exposes local-only endpoints for approvals and audit receipts. No cloud service is required.
+Approvals and audit receipts run over local-only endpoints; there is no cloud service.
 
-The macOS installer builds the source in `desktop/macos/`, writes LaunchAgents under `~/Library/LaunchAgents`, and scopes the daemon to the current repository. By default it derives a stable project-local port in the `8765-9764` range and writes the same URL into the menu bar LaunchAgent.
-`effectgate verify-install <effect-id> --surface desktop` checks those LaunchAgents and runs the installed menu-bar binary with `EFFECTGATE_SELF_TEST=1` against a local daemon.
+The macOS installer builds the source in `desktop/macos/`, writes LaunchAgents under `~/Library/LaunchAgents`, and scopes the daemon to the current repo. By default it picks a stable project-local port in the `8765-9764` range and writes the same URL into the menu-bar LaunchAgent. `effectgate verify-install <effect-id> --surface desktop` checks those LaunchAgents and runs the menu-bar binary with `EFFECTGATE_SELF_TEST=1` against a local daemon.
 
 Dry-run without writing files:
 
@@ -264,28 +264,28 @@ The daemon API is local-only:
 - `POST /approve`
 - `POST /deny`
 
-## What Makes This Different
+## Why not just use the agent's auto mode?
 
-Native agent auto modes know generic danger: force pushes, broad deletes, secret exfiltration, and production deploys. EffectGate protects project-specific effects that only your codebase understands:
+An agent's built-in auto mode catches generic danger — force pushes, broad deletes, secret exfiltration, production deploys. EffectGate covers the effects that only your codebase knows are dangerous:
 
 - `chargeCustomer()`
 - `deleteTenant()`
 - `runBillingMigration()`
-- `DROP TABLE` or unsafe `DELETE`
+- `DROP TABLE`, or a `DELETE` with no `WHERE`
 - Java methods or packages with production side effects
 
-The goal is not to ask on every agent action. The normal path is silent. EffectGate interrupts only when a registered tripwire is hit, then leaves a local pending alert and audit receipt. After a protected effect is approved and runs, `bar --recent` and the desktop menu can still show that it happened without turning it into another approval prompt.
+It is not meant to ask about every action. Ordinary commands pass silently, and EffectGate only interrupts when a registered tripwire fires — then it leaves a pending alert and an audit receipt. Once an effect is approved and runs, `bar --recent` and the desktop menu can show that it happened without turning it into another prompt.
 
-## Shareable Demo
+## Demo
 
 ```bash
 effectgate demo --dir /tmp
 ```
 
-This creates `/tmp/effectgate-demo`, registers `billing.charge`, simulates a protected function attempt, and leaves a pending alert:
+This creates `/tmp/effectgate-demo`, registers `billing.charge`, simulates a protected call, and leaves a pending alert:
 
 ```text
 EffectGate: 1 pending - billing.charge
 ```
 
-That is the README hero: AI agents can work freely until they cross a project-defined production-effect line.
+That is the whole idea: an agent works freely until it crosses a line your project drew.
